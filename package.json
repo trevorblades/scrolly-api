@@ -12,7 +12,7 @@
     "url": "git+https://github.com/trevorblades/scrolly-api.git"
   },
   "scripts": {
-    "start": "nodemon app.js"
+    "start": "[ -d projects ] || mkdir projects && nodemon app.js"
   },
   "engines": {
     "node": "6.2.2"
