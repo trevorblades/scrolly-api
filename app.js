@@ -5,12 +5,13 @@ const fs = require('fs');
 const jsonfile = require('jsonfile');
 const uniqid = require('uniqid');
 
+const MAX_BODY_SIZE = '10mb';
 const PROJECT_DIR = __dirname + '/projects';
 
 const app = express();
 app.enable('trust proxy');
 app.use(bodyParser.json({
-  limit: '10mb'
+  limit: MAX_BODY_SIZE
 }));
 app.use(cors({
   origin: /^https?:\/\/(localhost(:\d{4})?)$/,
