@@ -12,7 +12,7 @@
     "url": "git+https://github.com/trevorblades/scrolly-api.git"
   },
   "scripts": {
-    "start": "DATABASE_URL=postgres://localhost/scrolly nodemon app.js"
+    "start": "nodemon app.js"
   },
   "engines": {
     "node": "6.2.2"
@@ -21,7 +21,11 @@
     "extends": "planet"
   },
   "dependencies": {
-    "express": "^4.14.0"
+    "body-parser": "^1.15.2",
+    "cors": "^2.8.1",
+    "express": "^4.14.0",
+    "jsonfile": "^2.4.0",
+    "uniqid": "^4.1.0"
   },
   "devDependencies": {
     "eslint": "^3.12.2",
