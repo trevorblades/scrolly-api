@@ -1,0 +1,31 @@
+{
+  "name": "scrolly-api",
+  "version": "0.0.0",
+  "description": "Scrolly API",
+  "author": {
+    "name": "Trevor Blades",
+    "email": "tdblades@gmail.com"
+  },
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trevorblades/scrolly-api.git"
+  },
+  "scripts": {
+    "start": "DATABASE_URL=postgres://localhost/scrolly nodemon app.js"
+  },
+  "engines": {
+    "node": "6.2.2"
+  },
+  "eslintConfig": {
+    "extends": "planet"
+  },
+  "dependencies": {
+    "express": "^4.14.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.12.2",
+    "eslint-config-planet": "^9.0.0",
+    "nodemon": "^1.11.0"
+  }
+}
