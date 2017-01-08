@@ -25,6 +25,7 @@
     "cors": "^2.8.1",
     "express": "^4.14.0",
     "jsonfile": "^2.4.0",
+    "s3": "^4.4.0",
     "uniqid": "^4.1.0"
   },
   "devDependencies": {
