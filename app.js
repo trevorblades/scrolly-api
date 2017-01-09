@@ -5,6 +5,7 @@ const pg = require('pg');
 const uniqid = require('uniqid');
 const url = require('url');
 
+const splitObject = require('./util/split-object');
 const uploadAssets = require('./util/upload-assets');
 
 const MAX_BODY_SIZE = '10mb';
@@ -54,53 +55,77 @@ app.route('/projects')
         return res.sendStatus(500);
       }
 
+      const timestamp = new Date().toISOString();
       const project = {
         slug: uniqid.process(),
         name: 'Untitled',
         layers: req.body.layers,
         assets: req.body.assets,
         step: req.body.step,
-        created_at: new Date(),
-        updated_at: new Date()
+        created_at: timestamp,
+        updated_at: timestamp
       };
-      const keys = Object.keys(project);
-      const values = keys.map(function(key) {
-        let value = project[key];
-        if (typeof value === 'object') {
-          value = JSON.stringify(value);
-        }
-        return value;
-      });
+      const {keys, values} = splitObject(project, true);
       const query = `INSERT INTO projects(${keys.join(', ')})
-          values (${keys.map((key, index) => `$${index + 1}`).join(', ')})`;
+          VALUES (${keys.map((key, index) => `$${index + 1}`).join(', ')})
+          RETURNING *`;
       client.query(query, values, function(err, result) {
         done();
         if (err) {
           return res.sendStatus(500);
         }
+        project.id = result.rows[0].id;
         res.send(project);
       });
     });
   });
 
-app.route('/projects/:slug')
-  .get(function(req, res) {
-    pool.connect(function(err, client, done) {
+app.get('/projects/:slug', function(req, res) {
+  pool.connect(function(err, client, done) {
+    if (err) {
+      return res.sendStatus(500);
+    }
+    const query = 'SELECT id, slug, name, layers::json, assets::json, step, created_at, updated_at FROM projects WHERE slug = $1';
+    client.query(query, [req.params.slug], function(err, result) {
+      done();
       if (err) {
         return res.sendStatus(500);
       }
-      const query = 'SELECT slug, name, layers::json, assets::json, step, created_at, updated_at FROM projects WHERE slug=$1';
-      client.query(query, [req.params.slug], function(err, result) {
-        done();
-        if (err) {
-          return res.sendStatus(500);
-        }
-        res.send(result.rows[0]);
-      });
-    });
-  })
-  .put(function(req, res) {
 
+      const project = result.rows[0];
+      if (!req.query.id) {
+        delete project.id;
+      }
+      res.send(project);
+    });
   });
+});
+
+app.put('/projects/:id', uploadAssets, function(req, res) {
+  pool.connect(function(err, client, done) {
+    if (err) {
+      return res.sendStatus(500);
+    }
+
+    const project = {
+      name: req.body.name,
+      layers: req.body.layers,
+      assets: req.body.assets,
+      step: req.body.step,
+      updated_at: new Date().toISOString()
+    };
+    const {keys, values} = splitObject(project, true);
+    const expressions = keys.map((key, index) => `${key} = $${index + 1}`);
+    const query = `UPDATE projects SET ${expressions.join(', ')}
+        WHERE id = ${req.params.id}`;
+    client.query(query, values, function(err, result) {
+      done();
+      if (err) {
+        return res.sendStatus(500);
+      }
+      res.send(project);
+    });
+  });
+});
 
 app.listen(process.env.PORT || 8000);
