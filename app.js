@@ -17,7 +17,7 @@ app.use(bodyParser.json({
   limit: MAX_BODY_SIZE
 }));
 app.use(cors({
-  origin: /^https?:\/\/(localhost(:\d{4})?)$/,
+  origin: /^https?:\/\/((localhost(:\d{4})?)|((\w*\.)?scrol.ly))$/,
   methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
 
