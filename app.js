@@ -93,7 +93,7 @@ app.get('/projects/:slug', function(req, res) {
       }
 
       const project = result.rows[0];
-      if (!req.query.id) {
+      if (!req.query.id) { // TODO change this to some kind of auth strategy
         delete project.id;
       }
       res.send(project);
