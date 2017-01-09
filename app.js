@@ -58,7 +58,7 @@ app.route('/projects')
       const timestamp = new Date().toISOString();
       const project = {
         slug: uniqid.process(),
-        name: 'Untitled',
+        name: req.body.name,
         layers: req.body.layers,
         assets: req.body.assets,
         step: req.body.step,
