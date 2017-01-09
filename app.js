@@ -1,20 +1,27 @@
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const express = require('express');
-const fs = require('fs');
-const jsonfile = require('jsonfile');
-const s3 = require('s3');
+const pg = require('pg');
 const uniqid = require('uniqid');
+const url = require('url');
+
+const uploadAssets = require('./util/upload-assets');
 
 const MAX_BODY_SIZE = '10mb';
-const PROJECT_DIR = __dirname + '/projects';
 
-var client = s3.createClient({
-  s3Options: {
-    accessKeyId: 'AKIAJIK2TJKA7EQZPO2Q',
-    secretAccessKey: '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'
-  }
-});
+pg.defaults.ssl = process.env.NODE_ENV === 'production';
+const databaseUrl = url.parse(process.env.DATABASE_URL);
+const pgOptions = {
+  database: databaseUrl.path.slice(1),
+  host: databaseUrl.host,
+  port: databaseUrl.port
+};
+if (databaseUrl.auth) {
+  const credentials = databaseUrl.auth.split(':');
+  pgOptions.user = credentials[0];
+  pgOptions.password = credentials[1];
+}
+const pool = new pg.Pool(pgOptions);
 
 const app = express();
 app.enable('trust proxy');
@@ -26,53 +33,74 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
 
-app.post('/assets', function(req, res) {
-  const uploader = client.uploadFile({
-    localFile: req.params.file,
-    s3Params: {
-      Bucket: 'assets.scrol.ly'
-    }
-  });
-  uploader.on('error', function() {
-    res.sendStatus(500);
-  });
-  uploader.on('end', function() {
-    res.send('Complete!');
-  });
-});
-
 app.route('/projects')
   .get(function(req, res) {
-    fs.readdir(PROJECT_DIR, function(err, files) {
-      res.send(files);
-    });
-  })
-  .post(function(req, res) {
-    const id = uniqid.process();
-    jsonfile.writeFile(`${PROJECT_DIR}/${id}.json`, req.body, function(err) {
+    pool.connect(function(err, client, done) {
       if (err) {
         return res.sendStatus(500);
       }
-      res.send(id);
+      client.query('SELECT * FROM projects', function(err, result) {
+        done();
+        if (err) {
+          return res.sendStatus(500);
+        }
+        res.send(result.rows);
+      });
+    });
+  })
+  .post(uploadAssets, function(req, res) {
+    pool.connect(function(err, client, done) {
+      if (err) {
+        return res.sendStatus(500);
+      }
+
+      const project = {
+        slug: uniqid.process(),
+        name: 'Untitled',
+        layers: req.body.layers,
+        assets: req.body.assets,
+        step: req.body.step,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+      const keys = Object.keys(project);
+      const values = keys.map(function(key) {
+        let value = project[key];
+        if (typeof value === 'object') {
+          value = JSON.stringify(value);
+        }
+        return value;
+      });
+      const query = `INSERT INTO projects(${keys.join(', ')})
+          values (${keys.map((key, index) => `$${index + 1}`).join(', ')})`;
+      client.query(query, values, function(err, result) {
+        done();
+        if (err) {
+          return res.sendStatus(500);
+        }
+        res.send(project);
+      });
     });
   });
 
-app.route('/projects/:id')
+app.route('/projects/:slug')
   .get(function(req, res) {
-    jsonfile.readFile(`${PROJECT_DIR}/${req.params.id}.json`, function(err, file) {
+    pool.connect(function(err, client, done) {
       if (err) {
-        return res.sendStatus(404);
+        return res.sendStatus(500);
       }
-      res.send(file);
+      const query = 'SELECT slug, name, layers::json, assets::json, step, created_at, updated_at FROM projects WHERE slug=$1';
+      client.query(query, [req.params.slug], function(err, result) {
+        done();
+        if (err) {
+          return res.sendStatus(500);
+        }
+        res.send(result.rows[0]);
+      });
     });
   })
   .put(function(req, res) {
-    jsonfile.writeFile(`${PROJECT_DIR}/${req.params.id}.json`, function(err) {
-      if (err) {
-        return res.sendStatus(500);
-      }
-      res.send(req.params.id);
-    });
+
   });
 
 app.listen(process.env.PORT || 8000);
