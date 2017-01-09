@@ -68,7 +68,7 @@ app.route('/projects')
       const {keys, values} = splitObject(project, true);
       const query = `INSERT INTO projects(${keys.join(', ')})
           VALUES (${keys.map((key, index) => `$${index + 1}`).join(', ')})
-          RETURNING *`;
+          RETURNING id`;
       client.query(query, values, function(err, result) {
         done();
         if (err) {
@@ -92,11 +92,11 @@ app.get('/projects/:slug', function(req, res) {
         return res.sendStatus(500);
       }
 
-      const project = result.rows[0];
+      const row = result.rows[0];
       if (!req.query.id) { // TODO change this to some kind of auth strategy
-        delete project.id;
+        delete row.id;
       }
-      res.send(project);
+      res.send(row);
     });
   });
 });
@@ -117,13 +117,20 @@ app.put('/projects/:id', uploadAssets, function(req, res) {
     const {keys, values} = splitObject(project, true);
     const expressions = keys.map((key, index) => `${key} = $${index + 1}`);
     const query = `UPDATE projects SET ${expressions.join(', ')}
-        WHERE id = ${req.params.id}`;
+        WHERE id = ${req.params.id}
+        RETURNING slug, created_at`;
     client.query(query, values, function(err, result) {
       done();
       if (err) {
         return res.sendStatus(500);
       }
-      res.send(project);
+
+      const row = result.rows[0];
+      res.send(Object.assign(project, {
+        id: req.params.id,
+        slug: row.slug,
+        created_at: row.created_at
+      }));
     });
   });
 });
