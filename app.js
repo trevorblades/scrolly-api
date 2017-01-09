@@ -90,13 +90,10 @@ app.get('/projects/:slug', function(req, res) {
       done();
       if (err) {
         return res.sendStatus(500);
+      } else if (!result.rows.length) {
+        return res.sendStatus(404);
       }
-
-      const row = result.rows[0];
-      if (!req.query.id) { // TODO change this to some kind of auth strategy
-        delete row.id;
-      }
-      res.send(row);
+      res.send(result.rows[0]);
     });
   });
 });
@@ -127,7 +124,7 @@ app.put('/projects/:id', uploadAssets, function(req, res) {
 
       const row = result.rows[0];
       res.send(Object.assign(project, {
-        id: req.params.id,
+        id: parseInt(req.params.id),
         slug: row.slug,
         created_at: row.created_at
       }));
