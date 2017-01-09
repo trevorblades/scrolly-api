@@ -3,7 +3,6 @@ const cors = require('cors');
 const express = require('express');
 const pg = require('pg');
 const uniqid = require('uniqid');
-const url = require('url');
 
 const splitObject = require('./util/split-object');
 const uploadAssets = require('./util/upload-assets');
@@ -11,18 +10,6 @@ const uploadAssets = require('./util/upload-assets');
 const MAX_BODY_SIZE = '10mb';
 
 pg.defaults.ssl = process.env.NODE_ENV === 'production';
-const databaseUrl = url.parse(process.env.DATABASE_URL);
-const pgOptions = {
-  database: databaseUrl.path.slice(1),
-  host: databaseUrl.host,
-  port: databaseUrl.port
-};
-if (databaseUrl.auth) {
-  const credentials = databaseUrl.auth.split(':');
-  pgOptions.user = credentials[0];
-  pgOptions.password = credentials[1];
-}
-const pool = new pg.Pool(pgOptions);
 
 const app = express();
 app.enable('trust proxy');
@@ -36,7 +23,7 @@ app.use(cors({
 
 app.route('/projects')
   .get(function(req, res) {
-    pool.connect(function(err, client, done) {
+    pg.connect(process.env.DATABASE_URL, function(err, client, done) {
       if (err) {
         return res.sendStatus(500);
       }
@@ -50,7 +37,7 @@ app.route('/projects')
     });
   })
   .post(uploadAssets, function(req, res) {
-    pool.connect(function(err, client, done) {
+    pg.connect(process.env.DATABASE_URL, function(err, client, done) {
       if (err) {
         return res.sendStatus(500);
       }
@@ -81,7 +68,7 @@ app.route('/projects')
   });
 
 app.get('/projects/:slug', function(req, res) {
-  pool.connect(function(err, client, done) {
+  pg.connect(process.env.DATABASE_URL, function(err, client, done) {
     if (err) {
       return res.sendStatus(500);
     }
@@ -99,7 +86,7 @@ app.get('/projects/:slug', function(req, res) {
 });
 
 app.put('/projects/:id', uploadAssets, function(req, res) {
-  pool.connect(function(err, client, done) {
+  pg.connect(process.env.DATABASE_URL, function(err, client, done) {
     if (err) {
       return res.sendStatus(500);
     }
