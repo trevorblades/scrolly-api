@@ -27,7 +27,7 @@ app.route('/projects')
       if (err) {
         return res.sendStatus(500);
       }
-      client.query('SELECT * FROM projects', function(err, result) {
+      client.query('SELECT id, slug, name, layers::json, assets::json, step, created_at, updated_at FROM projects', function(err, result) {
         done();
         if (err) {
           return res.sendStatus(500);
