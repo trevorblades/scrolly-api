@@ -24,8 +24,7 @@ module.exports = function(req, res, next) {
         if (err) {
           return res.sendStatus(500);
         }
-        asset.src = data.Location;
-        req.assets.push(data.Location);
+        asset.src = `https://assets.scrol.ly/${data.Key}`;
         assetsRemaining--;
         if (!assetsRemaining) {
           next();
