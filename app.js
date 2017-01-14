@@ -123,8 +123,8 @@ app.route('/projects')
         return res.sendStatus(500);
       }
 
-      const query = 'SELECT id, user_id, slug, name, width, height, layers::json, assets::json, step, created_at, updated_at FROM projects';
-      client.query(query, function(err, result) {
+      const query = 'SELECT id, slug, name, width, height, layers::json, assets::json, step, created_at, updated_at FROM projects WHERE user_id = $1';
+      client.query(query, [req.user.id], function(err, result) {
         done();
         if (err) {
           return res.sendStatus(500);
