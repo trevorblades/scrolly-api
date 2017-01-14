@@ -196,6 +196,9 @@ app.get('/projects/:slug', authorize(true), function(req, res) {
       }
 
       const project = result.rows[0];
+      if (req.user && req.user.id !== project.user_id) {
+        return res.sendStatus(401);
+      }
       res.send(project);
     });
   });
