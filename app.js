@@ -113,7 +113,7 @@ app.post('/users', function(req, res) {
 });
 
 app.route('/projects')
-  .get(authorize, function(req, res) {
+  .get(authorize(), function(req, res) {
     if (!req.user) {
       return res.sendStatus(401);
     }
@@ -133,7 +133,7 @@ app.route('/projects')
       });
     });
   })
-  .post(authorize, uploadAssets, function(req, res) {
+  .post(authorize(), uploadAssets, function(req, res) {
     pg.connect(process.env.DATABASE_URL, function(err, client, done) {
       if (err) {
         return res.sendStatus(500);
@@ -167,13 +167,26 @@ app.route('/projects')
     });
   });
 
-app.get('/projects/:slug', function(req, res) {
+app.get('/projects/:slug', authorize(true), function(req, res) {
   pg.connect(process.env.DATABASE_URL, function(err, client, done) {
     if (err) {
       return res.sendStatus(500);
     }
 
-    const query = 'SELECT name, width, height, layers::json, assets::json, step, created_at, updated_at FROM projects WHERE slug = $1';
+    const columns = [
+      'name',
+      'width',
+      'height',
+      'layers::json',
+      'assets::json',
+      'step',
+      'created_at',
+      'updated_at'
+    ];
+    if (req.user) {
+      columns.push('id', 'slug');
+    }
+    const query = `SELECT ${columns.join(', ')} FROM projects WHERE slug = $1`;
     client.query(query, [req.params.slug], function(err, result) {
       done();
       if (err) {
@@ -181,12 +194,14 @@ app.get('/projects/:slug', function(req, res) {
       } else if (!result.rows.length) {
         return res.sendStatus(404);
       }
-      res.send(result.rows[0]);
+
+      const project = result.rows[0];
+      res.send(project);
     });
   });
 });
 
-app.put('/projects/:id', authorize, uploadAssets, function(req, res) {
+app.put('/projects/:id', authorize(), uploadAssets, function(req, res) {
   pg.connect(process.env.DATABASE_URL, function(err, client, done) {
     if (err) {
       return res.sendStatus(500);
