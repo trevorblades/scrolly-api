@@ -21,6 +21,14 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
 
+app.post('/auth', function(req, res) {
+  if (req.body.email !== 'email' || req.body.password !== 'password') {
+    return res.sendStatus(401);
+  }
+  const token = 'dfasadfs';
+  res.send(token);
+});
+
 app.route('/projects')
   .get(function(req, res) {
     pg.connect(process.env.DATABASE_URL, function(err, client, done) {
