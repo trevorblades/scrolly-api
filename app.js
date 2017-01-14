@@ -184,7 +184,7 @@ app.get('/projects/:slug', authorize(true), function(req, res) {
       'updated_at'
     ];
     if (req.user) {
-      columns.push('id', 'slug');
+      columns.push('id', 'user_id', 'slug');
     }
     const query = `SELECT ${columns.join(', ')} FROM projects WHERE slug = $1`;
     client.query(query, [req.params.slug], function(err, result) {
