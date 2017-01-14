@@ -46,6 +46,8 @@ app.route('/projects')
       const project = {
         slug: uniqid.process(),
         name: req.body.name,
+        width: req.body.width,
+        height: req.body.height,
         layers: req.body.layers,
         assets: req.body.assets,
         step: req.body.step,
@@ -72,7 +74,7 @@ app.get('/projects/:slug', function(req, res) {
     if (err) {
       return res.sendStatus(500);
     }
-    const query = 'SELECT id, slug, name, layers::json, assets::json, step, created_at, updated_at FROM projects WHERE slug = $1';
+    const query = 'SELECT id, slug, name, width, height, layers::json, assets::json, step, created_at, updated_at FROM projects WHERE slug = $1';
     client.query(query, [req.params.slug], function(err, result) {
       done();
       if (err) {
@@ -93,6 +95,8 @@ app.put('/projects/:id', uploadAssets, function(req, res) {
 
     const project = {
       name: req.body.name,
+      width: req.body.width,
+      height: req.body.height,
       layers: req.body.layers,
       assets: req.body.assets,
       step: req.body.step,
