@@ -85,13 +85,16 @@ app.post('/users', function(req, res) {
         };
         const {keys, values} = splitObject(user, true);
         const query = `INSERT INTO users(${keys.join(', ')})
-            VALUES (${keys.map((key, index) => `$${index + 1}`).join(', ')})`;
+            VALUES (${keys.map((key, index) => `$${index + 1}`).join(', ')})
+            RETURNING id, email, created_at, updated_at`;
         client.query(query, values, function(err, result) {
           done();
           if (err) {
             return res.sendStatus(500);
           }
-          res.sendStatus(200);
+
+          const token = jwt.sign(user, TOKEN_SECRET, {expiresIn: TOKEN_EXPIRY});
+          res.send(token);
         });
       });
   });
