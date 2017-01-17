@@ -114,21 +114,17 @@ app.post('/users', function(req, res) {
 
 app.route('/projects')
   .get(authorize(), function(req, res) {
-    console.log('doin it');
     pg.connect(process.env.DATABASE_URL, function(err, client, done) {
       if (err) {
         return res.sendStatus(500);
       }
 
-      console.log('still doin it');
       const query = 'SELECT id, slug, name, width, height, layers::json, assets::json, step, created_at, updated_at FROM projects WHERE user_id = $1';
       client.query(query, [req.user.id], function(err, result) {
         done();
         if (err) {
           return res.sendStatus(500);
         }
-
-        console.log('even still doin it');
         res.send(result.rows);
       });
     });
