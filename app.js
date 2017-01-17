@@ -120,7 +120,6 @@ app.route('/projects')
 
     pg.connect(process.env.DATABASE_URL, function(err, client, done) {
       if (err) {
-        console.log(err);
         return res.sendStatus(500);
       }
 
@@ -128,7 +127,6 @@ app.route('/projects')
       client.query(query, [req.user.id], function(err, result) {
         done();
         if (err) {
-          console.log(err);
           return res.sendStatus(500);
         }
         res.send(result.rows);

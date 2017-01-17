@@ -1,1 +1,1 @@
-web: [ -d projects ] || mkdir projects && node app.js
+web: node app.js

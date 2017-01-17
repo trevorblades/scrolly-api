@@ -7,6 +7,7 @@ create table projects (
   height int not null,
   layers text not null,
   assets text not null,
+  step int not null,
   created_at timestamp not null,
   updated_at timestamp not null
 );
