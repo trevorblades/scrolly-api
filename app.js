@@ -105,7 +105,7 @@ app.post('/users', function(req, res) {
             return res.sendStatus(500);
           }
 
-          const token = jwt.sign(user, TOKEN_SECRET, {expiresIn: TOKEN_EXPIRY});
+          const token = jwt.sign(result.rows[0], TOKEN_SECRET, {expiresIn: TOKEN_EXPIRY});
           res.send(token);
         });
       });
