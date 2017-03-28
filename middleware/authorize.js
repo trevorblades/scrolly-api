@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const {TOKEN_SECRET} = require('../constants');
 
 module.exports = function(passthrough) {
   return function(req, res, next) {
@@ -17,7 +16,7 @@ module.exports = function(passthrough) {
       return next();
     }
 
-    jwt.verify(token, TOKEN_SECRET, function(err, decoded) {
+    jwt.verify(token, process.env.TOKEN_SECRET, function(err, decoded) {
       if (err && !passthrough) {
         return res.sendStatus(401);
       }

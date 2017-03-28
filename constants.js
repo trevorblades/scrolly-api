@@ -1,3 +1,3 @@
 module.exports = {
-  TOKEN_SECRET: 'LSD06vJP35py91chUfz24H5S9c'
+  TOKEN_EXPIRY: '7 days'
 };
